@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Voice-driven airport navigation for visually impaired travelers">
+    <meta name="theme-color" content="#0066cc">
+
+    <title>Airport Navigation Assistant</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/styles/main.css">
+</head>
+<body>
+    <!-- Main App Container -->
+    <div id="app" role="main">
+        <!-- Header -->
+        <header role="banner">
+            <h1>Hamburg Airport Navigation</h1>
+            <p class="subtitle">Voice-Guided Assistance</p>
+        </header>
+
+        <!-- Status Display -->
+        <section id="status-section" aria-live="polite" aria-atomic="true">
+            <div id="status-message" class="status-box">
+                <p id="status-text">Welcome! Tap the microphone or say "Help" to begin.</p>
+            </div>
+        </section>
+
+        <!-- Voice Control -->
+        <section id="voice-section">
+            <button id="voice-btn" class="voice-button" aria-label="Activate voice assistant">
+                <span class="mic-icon" aria-hidden="true">🎤</span>
+                <span class="voice-label">Tap to Speak</span>
+            </button>
+            <p id="listening-indicator" class="listening-text" aria-live="assertive"></p>
+        </section>
+
+        <!-- Navigation Display -->
+        <section id="navigation-section" class="hidden" aria-live="polite">
+            <div class="nav-container">
+                <h2>Current Direction</h2>
+                <div id="current-step" class="step-card">
+                    <p class="step-number">Step <span id="step-num">1</span></p>
+                    <p class="step-instruction" id="step-text">Loading...</p>
+                    <p class="step-distance" id="step-distance">0 meters</p>
+                </div>
+                <button id="next-step-btn" class="action-button">
+                    Next Step
+                </button>
+                <button id="cancel-nav-btn" class="secondary-button">
+                    Cancel Navigation
+                </button>
+            </div>
+        </section>
+
+        <!-- Location Search Results -->
+        <section id="search-results-section" class="hidden">
+            <h2>Search Results</h2>
+            <div id="search-results" class="results-container">
+                <!-- Results will be populated here -->
+            </div>
+        </section>
+
+        <!-- Flight Information -->
+        <section id="flight-section" class="hidden">
+            <h2>Your Flight</h2>
+            <div id="flight-info" class="info-card">
+                <p><strong>Flight:</strong> <span id="flight-number">---</span></p>
+                <p><strong>Gate:</strong> <span id="flight-gate">---</span></p>
+                <p><strong>Status:</strong> <span id="flight-status">---</span></p>
+                <p><strong>Time:</strong> <span id="flight-time">---</span></p>
+            </div>
+            <button id="navigate-to-gate-btn" class="action-button hidden">
+                Navigate to Gate
+            </button>
+        </section>
+
+        <!-- Emergency Button -->
+        <section id="emergency-section">
+            <button id="emergency-btn" class="emergency-button" aria-label="Request emergency help">
+                <span class="emergency-icon" aria-hidden="true">🆘</span>
+                <span class="emergency-label">Emergency Help</span>
+            </button>
+        </section>
+
+        <!-- Quick Actions -->
+        <section id="quick-actions" class="quick-actions">
+            <h3>Quick Actions</h3>
+            <button class="quick-action-btn" data-query="Where is the nearest bathroom?">
+                Find Bathroom
+            </button>
+            <button class="quick-action-btn" data-query="Show me my flight information">
+                My Flight
+            </button>
+            <button class="quick-action-btn" data-query="Where is the information desk?">
+                Info Desk
+            </button>
+        </section>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/utils.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/voice.js"></script>
+    <script src="/js/navigation.js"></script>
+    <script src="/js/app.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(reg => console.log('Service Worker registered:', reg))
+                .catch(err => console.error('Service Worker registration failed:', err));
+        }
+    </script>
+</body>
+</html>

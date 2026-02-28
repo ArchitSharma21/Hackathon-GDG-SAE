@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airport Digital Twin Simulation</title>
+    <link rel="stylesheet" href="/styles/simulation.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🛫 Hamburg Airport Digital Twin Simulation</h1>
+            <p>Interactive demo with real-time position tracking</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Side: Airport Simulation -->
+            <div class="simulation-panel">
+                <div class="panel-header">
+                    <h2>Airport Map (2D Top-Down View)</h2>
+                    <div class="controls">
+                        <label>
+                            <input type="checkbox" id="show-labels" checked> Show Labels
+                        </label>
+                        <label>
+                            Floor:
+                            <select id="floor-selector">
+                                <option value="1" selected>Floor 1 (Arrivals)</option>
+                                <option value="2">Floor 2 (Departures)</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="airport-map" width="800" height="600"></canvas>
+                </div>
+
+                <div class="position-info">
+                    <div class="info-item">
+                        <strong>Current Position:</strong>
+                        <span id="current-position">Main Entrance (Floor 1)</span>
+                    </div>
+                    <div class="info-item">
+                        <strong>Coordinates:</strong>
+                        <span id="coordinates">x: 0, y: 0</span>
+                    </div>
+                    <div class="info-item">
+                        <strong>Nearest Location:</strong>
+                        <span id="nearest-location">-</span>
+                    </div>
+                </div>
+
+                <!-- Navigation Bar -->
+                <div class="nav-bar">
+                    <input type="text" id="nav-query" placeholder='e.g. "nearest restroom" or "gate B25"' />
+                    <button id="nav-go" class="btn-nav">Navigate</button>
+                    <button id="stop-navigation" class="btn-stop">Stop</button>
+                </div>
+                <div id="nav-status" class="nav-status" style="display:none;"></div>
+
+                <div class="movement-controls">
+                    <p>⌨️ Arrow Keys to move &nbsp;|&nbsp;
+                       🖱️ Type a destination above and press Navigate</p>
+                    <button id="reset-position" class="btn-control">Reset to Entrance</button>
+                </div>
+            </div>
+
+            <!-- Right Side: Phone Mockup -->
+            <div class="phone-panel">
+                <div class="phone-mockup">
+                    <div class="phone-header">
+                        <div class="phone-notch"></div>
+                        <div class="phone-time">12:30</div>
+                        <div class="phone-battery">🔋 85%</div>
+                    </div>
+
+                    <div class="phone-content">
+                        <iframe id="app-frame" src="/index.html"></iframe>
+                    </div>
+
+                    <div class="phone-bottom">
+                        <div class="phone-indicator"></div>
+                    </div>
+                </div>
+
+                <div class="phone-info">
+                    <h3>App Interface</h3>
+                    <p>This shows the actual navigation app as the user would see it on their phone.</p>
+                    <p><strong>Real-time sync:</strong> Position updates from the simulation automatically feed into the app.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <h3>Map Legend</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #4CAF50;"></div>
+                    <span>Entrance/Exit</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #2196F3;"></div>
+                    <span>Gates</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #FF9800;"></div>
+                    <span>Restaurants</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #9C27B0;"></div>
+                    <span>Bathrooms</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #F44336;"></div>
+                    <span>Info Desk</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #607D8B;"></div>
+                    <span>Security</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #FFD700;"></div>
+                    <span>Person (You)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #00BCD4; border: 2px dashed #000;"></div>
+                    <span>Navigation Path</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/simulation.js"></script>
+</body>
+</html>

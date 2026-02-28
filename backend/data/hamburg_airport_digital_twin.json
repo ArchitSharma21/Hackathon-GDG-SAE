@@ -1,0 +1,262 @@
+{
+  "airport": "Hamburg Airport (HAM) - Digital Twin",
+  "terminal": "Terminal 1 & 2",
+  "floors": 2,
+  "nodes": [
+    {
+      "id": "entrance_main",
+      "name": "Main Entrance",
+      "type": "entrance",
+      "floor": 1,
+      "coordinates": {"x": 50, "y": 500},
+      "description": "Main entrance to Hamburg Airport"
+    },
+    {
+      "id": "exit_south",
+      "name": "South Exit",
+      "type": "exit",
+      "floor": 1,
+      "coordinates": {"x": 700, "y": 500},
+      "description": "South exit from arrivals area"
+    },
+    {
+      "id": "security_1",
+      "name": "Security Checkpoint 1",
+      "type": "security",
+      "floor": 1,
+      "coordinates": {"x": 200, "y": 450},
+      "description": "Ground floor security checkpoint"
+    },
+    {
+      "id": "info_desk_1",
+      "name": "Information Desk",
+      "type": "info",
+      "floor": 1,
+      "coordinates": {"x": 400, "y": 500},
+      "description": "Main information desk - arrivals level"
+    },
+    {
+      "id": "bathroom_1a",
+      "name": "Restroom 1A",
+      "type": "bathroom",
+      "floor": 1,
+      "coordinates": {"x": 150, "y": 350},
+      "description": "Public restroom - Floor 1 West"
+    },
+    {
+      "id": "bathroom_1b",
+      "name": "Restroom 1B",
+      "type": "bathroom",
+      "floor": 1,
+      "coordinates": {"x": 650, "y": 350},
+      "description": "Public restroom - Floor 1 East"
+    },
+    {
+      "id": "restaurant_1a",
+      "name": "Cafe Hamburg",
+      "type": "restaurant",
+      "floor": 1,
+      "coordinates": {"x": 300, "y": 350},
+      "description": "Coffee and light meals - arrivals level"
+    },
+    {
+      "id": "restaurant_1b",
+      "name": "Bistro Express",
+      "type": "restaurant",
+      "floor": 1,
+      "coordinates": {"x": 500, "y": 350},
+      "description": "Quick service restaurant"
+    },
+    {
+      "id": "stairs_up_1",
+      "name": "Stairs to Floor 2",
+      "type": "stairs",
+      "floor": 1,
+      "coordinates": {"x": 400, "y": 250},
+      "description": "Escalators and stairs to departures level"
+    },
+    {
+      "id": "baggage_1",
+      "name": "Baggage Claim",
+      "type": "baggage",
+      "floor": 1,
+      "coordinates": {"x": 250, "y": 520},
+      "description": "Baggage claim area"
+    },
+    {
+      "id": "stairs_down_2",
+      "name": "Stairs to Floor 1",
+      "type": "stairs",
+      "floor": 2,
+      "coordinates": {"x": 400, "y": 250},
+      "description": "Escalators and stairs to arrivals level"
+    },
+    {
+      "id": "security_2",
+      "name": "Security Checkpoint 2",
+      "type": "security",
+      "floor": 2,
+      "coordinates": {"x": 400, "y": 450},
+      "description": "Departures security checkpoint"
+    },
+    {
+      "id": "info_desk_2",
+      "name": "Information Desk F2",
+      "type": "info",
+      "floor": 2,
+      "coordinates": {"x": 400, "y": 350},
+      "description": "Information desk - departures level"
+    },
+    {
+      "id": "gate_e12",
+      "name": "Gate E12",
+      "type": "gate",
+      "floor": 2,
+      "coordinates": {"x": 60, "y": 100},
+      "description": "Boarding gate E12 - Section E",
+      "terminal": "E"
+    },
+    {
+      "id": "gate_e14",
+      "name": "Gate E14",
+      "type": "gate",
+      "floor": 2,
+      "coordinates": {"x": 120, "y": 100},
+      "description": "Boarding gate E14 - Section E",
+      "terminal": "E"
+    },
+    {
+      "id": "gate_d5",
+      "name": "Gate D5",
+      "type": "gate",
+      "floor": 2,
+      "coordinates": {"x": 220, "y": 100},
+      "description": "Boarding gate D5 - Section D",
+      "terminal": "D"
+    },
+    {
+      "id": "gate_d7",
+      "name": "Gate D7",
+      "type": "gate",
+      "floor": 2,
+      "coordinates": {"x": 280, "y": 100},
+      "description": "Boarding gate D7 - Section D",
+      "terminal": "D"
+    },
+    {
+      "id": "gate_c3",
+      "name": "Gate C3",
+      "type": "gate",
+      "floor": 2,
+      "coordinates": {"x": 380, "y": 80},
+      "description": "Boarding gate C3 - Section C",
+      "terminal": "C"
+    },
+    {
+      "id": "gate_c6",
+      "name": "Gate C6",
+      "type": "gate",
+      "floor": 2,
+      "coordinates": {"x": 440, "y": 80},
+      "description": "Boarding gate C6 - Section C",
+      "terminal": "C"
+    },
+    {
+      "id": "gate_b25",
+      "name": "Gate B25",
+      "type": "gate",
+      "floor": 2,
+      "coordinates": {"x": 540, "y": 100},
+      "description": "Boarding gate B25 - Section B",
+      "terminal": "B"
+    },
+    {
+      "id": "gate_b30",
+      "name": "Gate B30",
+      "type": "gate",
+      "floor": 2,
+      "coordinates": {"x": 600, "y": 100},
+      "description": "Boarding gate B30 - Section B",
+      "terminal": "B"
+    },
+    {
+      "id": "gate_a24",
+      "name": "Gate A24",
+      "type": "gate",
+      "floor": 2,
+      "coordinates": {"x": 690, "y": 100},
+      "description": "Boarding gate A24 - Section A",
+      "terminal": "A"
+    },
+    {
+      "id": "bathroom_2a",
+      "name": "Restroom 2A",
+      "type": "bathroom",
+      "floor": 2,
+      "coordinates": {"x": 150, "y": 200},
+      "description": "Public restroom - Floor 2 West"
+    },
+    {
+      "id": "bathroom_2b",
+      "name": "Restroom 2B",
+      "type": "bathroom",
+      "floor": 2,
+      "coordinates": {"x": 650, "y": 200},
+      "description": "Public restroom - Floor 2 East"
+    },
+    {
+      "id": "restaurant_2a",
+      "name": "Sky Lounge",
+      "type": "restaurant",
+      "floor": 2,
+      "coordinates": {"x": 300, "y": 200},
+      "description": "Premium dining - departures level"
+    },
+    {
+      "id": "restaurant_2b",
+      "name": "Departure Cafe",
+      "type": "restaurant",
+      "floor": 2,
+      "coordinates": {"x": 500, "y": 200},
+      "description": "Cafe and snacks near gates"
+    }
+  ],
+  "paths": [
+    {"from": "entrance_main", "to": "security_1", "distance": 60, "directions": "Walk forward 60 meters to security checkpoint", "duration": 45},
+    {"from": "entrance_main", "to": "info_desk_1", "distance": 350, "directions": "Walk straight ahead 350 meters to information desk", "duration": 250},
+    {"from": "entrance_main", "to": "baggage_1", "distance": 220, "directions": "Walk right 220 meters to baggage claim", "duration": 160},
+    {"from": "security_1", "to": "bathroom_1a", "distance": 110, "directions": "Continue forward 50 meters, turn left", "duration": 80},
+    {"from": "security_1", "to": "restaurant_1a", "distance": 130, "directions": "Walk forward 100 meters to Cafe Hamburg", "duration": 95},
+    {"from": "info_desk_1", "to": "bathroom_1a", "distance": 300, "directions": "Turn left, walk 250 meters", "duration": 215},
+    {"from": "info_desk_1", "to": "bathroom_1b", "distance": 300, "directions": "Turn right, walk 250 meters", "duration": 215},
+    {"from": "restaurant_1a", "to": "stairs_up_1", "distance": 170, "directions": "Walk forward 150 meters to escalators", "duration": 120},
+    {"from": "restaurant_1b", "to": "stairs_up_1", "distance": 170, "directions": "Walk forward 150 meters to escalators", "duration": 120},
+    {"from": "stairs_up_1", "to": "stairs_down_2", "distance": 0, "directions": "Take escalator to floor 2", "duration": 30},
+    {"from": "stairs_down_2", "to": "security_2", "distance": 200, "directions": "Exit escalator, walk to security", "duration": 145},
+    {"from": "security_2", "to": "info_desk_2", "distance": 100, "directions": "Walk forward 100 meters", "duration": 70},
+    {"from": "info_desk_2", "to": "bathroom_2a", "distance": 300, "directions": "Turn left, walk 250 meters", "duration": 215},
+    {"from": "info_desk_2", "to": "bathroom_2b", "distance": 300, "directions": "Turn right, walk 250 meters", "duration": 215},
+    {"from": "info_desk_2", "to": "restaurant_2a", "distance": 200, "directions": "Turn left, walk 150 meters to Sky Lounge", "duration": 145},
+    {"from": "info_desk_2", "to": "restaurant_2b", "distance": 200, "directions": "Turn right, walk 100 meters to cafe", "duration": 145},
+    {"from": "restaurant_2a", "to": "gate_e12", "distance": 180, "directions": "Walk left to gate area E, 160 meters", "duration": 130},
+    {"from": "restaurant_2a", "to": "gate_d5", "distance": 120, "directions": "Walk forward 100 meters to gate D5", "duration": 85},
+    {"from": "restaurant_2a", "to": "gate_d7", "distance": 100, "directions": "Walk forward 80 meters to gate D7", "duration": 70},
+    {"from": "restaurant_2b", "to": "gate_c3", "distance": 120, "directions": "Walk forward 100 meters to gate C3", "duration": 85},
+    {"from": "restaurant_2b", "to": "gate_c6", "distance": 90, "directions": "Walk forward 70 meters to gate C6", "duration": 65},
+    {"from": "restaurant_2b", "to": "gate_b25", "distance": 140, "directions": "Walk right to gate B25, 120 meters", "duration": 100},
+    {"from": "restaurant_2b", "to": "gate_b30", "distance": 190, "directions": "Walk right to gate B30, 170 meters", "duration": 135},
+    {"from": "restaurant_2b", "to": "gate_a24", "distance": 280, "directions": "Walk right to gate area A, 260 meters", "duration": 200},
+    {"from": "gate_e12", "to": "gate_e14", "distance": 60, "directions": "Walk along concourse E, 60 meters", "duration": 45},
+    {"from": "gate_e14", "to": "gate_d5", "distance": 100, "directions": "Walk to section D, 100 meters", "duration": 70},
+    {"from": "gate_d5", "to": "gate_d7", "distance": 60, "directions": "Walk along concourse D, 60 meters", "duration": 45},
+    {"from": "gate_d7", "to": "gate_c3", "distance": 100, "directions": "Walk to section C, 100 meters", "duration": 70},
+    {"from": "gate_c3", "to": "gate_c6", "distance": 60, "directions": "Walk along concourse C, 60 meters", "duration": 45},
+    {"from": "gate_c6", "to": "gate_b25", "distance": 100, "directions": "Walk to section B, 100 meters", "duration": 70},
+    {"from": "gate_b25", "to": "gate_b30", "distance": 60, "directions": "Walk along concourse B, 60 meters", "duration": 45},
+    {"from": "gate_b30", "to": "gate_a24", "distance": 90, "directions": "Walk to section A, 90 meters", "duration": 65},
+    {"from": "bathroom_2a", "to": "gate_e12", "distance": 130, "directions": "Exit restroom, turn left, 100 meters", "duration": 95},
+    {"from": "bathroom_2a", "to": "gate_d5", "distance": 90, "directions": "Exit restroom, walk right 70 meters", "duration": 65},
+    {"from": "bathroom_2b", "to": "gate_b30", "distance": 90, "directions": "Exit restroom, turn left, 70 meters", "duration": 65},
+    {"from": "bathroom_2b", "to": "gate_a24", "distance": 140, "directions": "Exit restroom, turn right, 120 meters", "duration": 100}
+  ]
+}

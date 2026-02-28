@@ -1,0 +1,126 @@
+{
+  "airport": "Hamburg Airport (HAM)",
+  "terminal": "Terminal 1",
+  "metadata": {
+    "coordinate_system": "Cartesian",
+    "origin": "Main Entrance (Bottom Center)",
+    "units": "meters (estimated scale)"
+  },
+  "nodes": [
+    {
+      "id": "entrance",
+      "name": "Main Entrance",
+      "type": "entrance",
+      "coordinates": {"x": 0, "y": 0},
+      "description": "Primary entry point from Drop Off Zone"
+    },
+    {
+      "id": "info_desk",
+      "name": "Information Desk",
+      "type": "info",
+      "coordinates": {"x": 0, "y": 15},
+      "description": "Central assistance hub in the Check-In Hall"
+    },
+    {
+      "id": "security",
+      "name": "Security Checkpoint",
+      "type": "security",
+      "coordinates": {"x": 0, "y": 35},
+      "description": "Main security screening before Departures Hub"
+    },
+    {
+      "id": "food_court",
+      "name": "Food Court",
+      "type": "food",
+      "coordinates": {"x": 0, "y": 60},
+      "description": "Central dining and retail zone"
+    },
+    {
+      "id": "bathroom_1",
+      "name": "Restroom Terminal 1 A",
+      "type": "bathroom",
+      "coordinates": {"x": -65, "y": 85},
+      "description": "Located in West Passage near Gate A1"
+    },
+    {
+      "id": "bathroom_2",
+      "name": "Restroom Terminal 1 B",
+      "type": "bathroom",
+      "coordinates": {"x": 55, "y": 85},
+      "description": "Located in East Wing near Gate B15"
+    },
+    {
+      "id": "gate_a1",
+      "name": "Gate A1",
+      "type": "gate",
+      "coordinates": {"x": -85, "y": 110},
+      "terminal": "A"
+    },
+    {
+      "id": "gate_a5",
+      "name": "Gate A5",
+      "type": "gate",
+      "coordinates": {"x": -95, "y": 90},
+      "terminal": "A"
+    },
+    {
+      "id": "gate_b12",
+      "name": "Gate B12",
+      "type": "gate",
+      "coordinates": {"x": 20, "y": 110},
+      "terminal": "B"
+    },
+    {
+      "id": "gate_b15",
+      "name": "Gate B15",
+      "type": "gate",
+      "coordinates": {"x": 55, "y": 110},
+      "terminal": "B"
+    },
+    {
+      "id": "gate_b20",
+      "name": "Gate B20",
+      "type": "gate",
+      "coordinates": {"x": 80, "y": 110},
+      "terminal": "B"
+    }
+  ],
+  "paths": [
+    {
+      "from": "entrance",
+      "to": "info_desk",
+      "distance": 15,
+      "directions": "Walk straight from the entrance to the center of the hall."
+    },
+    {
+      "from": "info_desk",
+      "to": "security",
+      "distance": 20,
+      "directions": "Proceed forward through the main ticketing corridor."
+    },
+    {
+      "from": "security",
+      "to": "food_court",
+      "distance": 25,
+      "directions": "After screening, enter the Central Departures Hub."
+    },
+    {
+      "from": "food_court",
+      "to": "gate_a1",
+      "distance": 95,
+      "directions": "Take the West Passage corridor (Left) toward the A-wing."
+    },
+    {
+      "from": "food_court",
+      "to": "gate_b12",
+      "distance": 55,
+      "directions": "Use the North Gallery 2 corridor toward the start of Concourse B."
+    },
+    {
+      "from": "food_court",
+      "to": "gate_b20",
+      "distance": 90,
+      "directions": "Take the East Wing corridor (Right) and follow the Central Link."
+    }
+  ]
+}
