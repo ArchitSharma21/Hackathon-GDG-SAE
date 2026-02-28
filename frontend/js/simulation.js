@@ -230,6 +230,8 @@ class AirportSimulation {
 
         // Text-to-speech
         this.speechSynth = window.speechSynthesis;
+        this.currentAudio = null;  // For Google Cloud TTS audio playback
+        this.useGoogleTTS = true;   // Use Google Cloud TTS instead of browser
 
         this.init();
     }
@@ -246,6 +248,17 @@ class AirportSimulation {
         this.loadLocations();
         this.setupEventListeners();
         this.startAnimationLoop();
+
+        // Pre-load voices (required for some browsers)
+        if (this.speechSynth) {
+            // Force voice loading
+            this.speechSynth.getVoices();
+            // Some browsers need the onvoiceschanged event
+            this.speechSynth.onvoiceschanged = () => {
+                const voices = this.speechSynth.getVoices();
+                console.log(`[VOICE] Voices loaded: ${voices.length} available`);
+            };
+        }
     }
 
     loadAirportPlan() {
@@ -351,61 +364,99 @@ class AirportSimulation {
     // ── Navigation ────────────────────────────────────────────────────────────
 
     // Resolve query → location id → run BFS → draw red path
-    navigateByQuery(query) {
+    async navigateByQuery(query) {
         if (!this.grid || !this.locations.length) {
             this._setStatus('Map is still loading…', true); return;
         }
-        const q = query.toLowerCase().trim();
+
         console.group(`[NLP] "${query}"`);
 
+        // First, try to understand the query using Gemini AI
         let destId = null;
+        try {
+            console.log('[GEMINI] Processing query with AI...');
+            const response = await fetch('/api/nlp/understand', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: query })
+            });
 
-        // Type-based lookups
-        if (/\b(restroom|bathroom|toilet|wc|lavatory)\b/.test(q)) {
-            destId = this._nearestOfType('restroom')?.id;
-            console.log(`→ restroom → ${destId}`);
+            if (response.ok) {
+                const nlpResult = await response.json();
+                console.log('[GEMINI] AI Understanding:', nlpResult);
 
-        } else if (/\b(restaurant|food|eat|cafe|hungry)\b/.test(q)) {
-            destId = this._nearestOfType('restaurant')?.id;
-            console.log(`→ restaurant → ${destId}`);
-
-        } else if (/security/.test(q)) {
-            destId = this.locations.find(l => l.type === 'security')?.id;
-            console.log(`→ security → ${destId}`);
-
-        } else if (/\b(entrance|exit|entry)\b/.test(q)) {
-            destId = this.locations.find(l => l.type === 'entrance')?.id;
-            console.log(`→ entrance → ${destId}`);
-
-        } else if (/\b(info|information)\b/.test(q)) {
-            destId = this.locations.find(l => l.type === 'info')?.id;
-            console.log(`→ info → ${destId}`);
-
-        } else if (/gate/.test(q)) {
-            // Match patterns like "gate a24", "gate e 12", "gate_d5"
-            const m = q.match(/gate[\s_]*([a-e])\s*(\d+)/i);
-            if (m) {
-                const gateId = `gate_${m[1].toLowerCase()}${m[2]}`;
-                const loc = this.locations.find(l => l.id === gateId);
-                console.log(`→ gate "${gateId}" → ${loc ? 'found' : 'NOT FOUND'}`);
-                if (!loc) {
-                    console.log('Available gates:',
-                        this.locations.filter(l => l.type === 'gate').map(l => l.id).join(', '));
+                // Use Gemini's understanding
+                if (nlpResult.location_id) {
+                    // Specific location identified
+                    destId = nlpResult.location_id;
+                    console.log(`[GEMINI] → Direct match: ${destId}`);
+                } else if (nlpResult.search_query) {
+                    // Use simplified search query
+                    console.log(`[GEMINI] → Using search query: "${nlpResult.search_query}"`);
+                    query = nlpResult.search_query;
                 }
-                destId = loc?.id;
-            } else {
-                console.log('gate pattern not matched');
-            }
 
-        } else {
-            // Fallback: match by id or name substring
-            const loc = this.locations.find(l =>
-                l.id === q.replace(/\s+/g, '_') ||
-                l.name.toLowerCase().includes(q)
-            );
-            console.log(`→ fallback: ${loc?.id ?? 'none'}`);
-            destId = loc?.id;
+                // Show AI understanding in status
+                this._setStatus(`🤖 Understanding: ${nlpResult.context}...`, false);
+                await new Promise(resolve => setTimeout(resolve, 800)); // Brief pause to show AI understanding
+            } else {
+                console.warn('[GEMINI] AI unavailable, using fallback parsing');
+            }
+        } catch (error) {
+            console.warn('[GEMINI] Error, using fallback:', error.message);
         }
+
+        // If Gemini didn't find a direct match, use fallback parsing
+        if (!destId) {
+            const q = query.toLowerCase().trim();
+
+            // Type-based lookups
+            if (/\b(restroom|bathroom|toilet|wc|lavatory)\b/.test(q)) {
+                destId = this._nearestOfType('restroom')?.id;
+                console.log(`→ restroom → ${destId}`);
+
+            } else if (/\b(restaurant|food|eat|cafe|hungry)\b/.test(q)) {
+                destId = this._nearestOfType('restaurant')?.id;
+                console.log(`→ restaurant → ${destId}`);
+
+            } else if (/security/.test(q)) {
+                destId = this.locations.find(l => l.type === 'security')?.id;
+                console.log(`→ security → ${destId}`);
+
+            } else if (/\b(entrance|exit|entry)\b/.test(q)) {
+                destId = this.locations.find(l => l.type === 'entrance')?.id;
+                console.log(`→ entrance → ${destId}`);
+
+            } else if (/\b(info|information)\b/.test(q)) {
+                destId = this.locations.find(l => l.type === 'info')?.id;
+                console.log(`→ info → ${destId}`);
+
+            } else if (/gate/.test(q)) {
+                // Match patterns like "gate a24", "gate e 12", "gate_d5"
+                const m = q.match(/gate[\s_]*([a-e])\s*(\d+)/i);
+                if (m) {
+                    const gateId = `gate_${m[1].toLowerCase()}${m[2]}`;
+                    const loc = this.locations.find(l => l.id === gateId);
+                    console.log(`→ gate "${gateId}" → ${loc ? 'found' : 'NOT FOUND'}`);
+                    if (!loc) {
+                        console.log('Available gates:',
+                            this.locations.filter(l => l.type === 'gate').map(l => l.id).join(', '));
+                    }
+                    destId = loc?.id;
+                } else {
+                    console.log('gate pattern not matched');
+                }
+
+            } else {
+                // Fallback: match by id or name substring
+                const loc = this.locations.find(l =>
+                    l.id === q.replace(/\s+/g, '_') ||
+                    l.name.toLowerCase().includes(q)
+                );
+                console.log(`→ fallback: ${loc?.id ?? 'none'}`);
+                destId = loc?.id;
+            }
+        } // End of fallback parsing
 
         console.groupEnd();
 
@@ -475,11 +526,15 @@ class AirportSimulation {
     }
 
     _generateVoiceInstructions() {
+        console.log('[VOICE] Generating voice instructions...');
         this.navigationInstructions = [];
         this.currentInstructionIndex = 0;
         this.lastSpokenInstruction = -1;
 
-        if (!this.routePath || this.routePath.length < 2) return;
+        if (!this.routePath || this.routePath.length < 2) {
+            console.warn('[VOICE] No route path available');
+            return;
+        }
 
         const path = this.routePath;
         const instructions = [];
@@ -559,24 +614,107 @@ class AirportSimulation {
         this._speakCurrentInstruction();
     }
 
-    _speakCurrentInstruction() {
-        if (!this.voiceEnabled) return;
-        if (this.currentInstructionIndex >= this.navigationInstructions.length) return;
-        if (this.currentInstructionIndex === this.lastSpokenInstruction) return;
+    async _speakCurrentInstruction() {
+        if (!this.voiceEnabled) {
+            console.log('[VOICE] Voice disabled, not speaking');
+            return;
+        }
+        if (this.currentInstructionIndex >= this.navigationInstructions.length) {
+            console.log('[VOICE] No more instructions');
+            return;
+        }
+        if (this.currentInstructionIndex === this.lastSpokenInstruction) {
+            console.log('[VOICE] Already spoke this instruction');
+            return;
+        }
 
         const instruction = this.navigationInstructions[this.currentInstructionIndex];
 
         console.log(`[VOICE] Speaking: "${instruction.text}"`);
 
-        if (this.speechSynth) {
-            this.speechSynth.cancel();
+        // Use Google Cloud TTS if enabled
+        if (this.useGoogleTTS) {
+            try {
+                console.log('[VOICE] Using Google Cloud TTS');
 
-            const utterance = new SpeechSynthesisUtterance(instruction.text);
-            utterance.rate = 0.9;
-            utterance.pitch = 1.0;
-            utterance.volume = 1.0;
+                // Stop any current audio
+                if (this.currentAudio) {
+                    this.currentAudio.pause();
+                    this.currentAudio = null;
+                }
 
-            this.speechSynth.speak(utterance);
+                // Call Google Cloud TTS API
+                const response = await fetch('/api/speech/synthesize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: instruction.text,
+                        language: 'en-US'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`TTS API error: ${response.status}`);
+                }
+
+                // Get audio blob
+                const audioBlob = await response.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+
+                // Create and play audio
+                this.currentAudio = new Audio(audioUrl);
+
+                this.currentAudio.onplay = () => {
+                    console.log('[VOICE] Google TTS playback started');
+                };
+
+                this.currentAudio.onended = () => {
+                    console.log('[VOICE] Google TTS playback ended');
+                    URL.revokeObjectURL(audioUrl);  // Clean up
+                };
+
+                this.currentAudio.onerror = (e) => {
+                    console.error('[VOICE] Audio playback error:', e);
+                    alert('Audio playback failed. Check browser console.');
+                };
+
+                await this.currentAudio.play();
+                console.log('[VOICE] Google TTS audio playing');
+
+            } catch (error) {
+                console.error('[VOICE] Google TTS error:', error);
+                alert(`Google TTS failed: ${error.message}. Falling back to browser speech.`);
+                this.useGoogleTTS = false;  // Fall back to browser speech
+                this._speakCurrentInstruction();  // Retry with browser speech
+                return;
+            }
+        } else {
+            // Fallback: use browser speech synthesis
+            if (!this.speechSynth) {
+                console.error('[VOICE] speechSynthesis not available!');
+                alert('Voice not supported in this browser.');
+                return;
+            }
+
+            try {
+                this.speechSynth.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(instruction.text);
+                utterance.rate = 0.9;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+
+                utterance.onstart = () => console.log('[VOICE] Browser speech started');
+                utterance.onend = () => console.log('[VOICE] Browser speech ended');
+                utterance.onerror = (e) => console.error('[VOICE] Browser speech error:', e);
+
+                this.speechSynth.speak(utterance);
+                console.log('[VOICE] Browser utterance queued');
+            } catch (error) {
+                console.error('[VOICE] Browser speech exception:', error);
+            }
         }
 
         this.lastSpokenInstruction = this.currentInstructionIndex;
@@ -704,6 +842,49 @@ class AirportSimulation {
             navInput.addEventListener('keydown',
                 e => { if (e.key === 'Enter') this.navigateByQuery(navInput.value); });
         }
+
+        // Voice test button (tests Google Cloud TTS)
+        const testVoiceBtn = document.getElementById('test-voice');
+        if (testVoiceBtn) testVoiceBtn.addEventListener('click', async () => {
+            console.log('[VOICE] Testing Google Cloud TTS...');
+
+            try {
+                const response = await fetch('/api/speech/synthesize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: 'Voice test successful. Google Cloud Text to Speech is working. You can now use navigation.',
+                        language: 'en-US'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API returned ${response.status}`);
+                }
+
+                const audioBlob = await response.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = new Audio(audioUrl);
+
+                audio.onended = () => {
+                    console.log('[VOICE] Test successful!');
+                    alert('✅ Google Cloud TTS is working! Now try navigation.');
+                    URL.revokeObjectURL(audioUrl);
+                };
+
+                audio.onerror = (e) => {
+                    console.error('[VOICE] Audio playback error:', e);
+                    alert('❌ Audio playback failed. Check browser permissions.');
+                };
+
+                await audio.play();
+                console.log('[VOICE] Test audio playing...');
+
+            } catch (error) {
+                console.error('[VOICE] Test failed:', error);
+                alert(`❌ Google TTS test failed: ${error.message}\n\nMake sure GOOGLE_APPLICATION_CREDENTIALS is set.`);
+            }
+        });
 
         // Voice control buttons
         const repeatBtn = document.getElementById('repeat-instruction');

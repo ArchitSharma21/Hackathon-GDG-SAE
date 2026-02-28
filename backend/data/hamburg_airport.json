@@ -54,35 +54,40 @@
       "name": "Gate A1",
       "type": "gate",
       "coordinates": {"x": -85, "y": 110},
-      "terminal": "A"
+      "terminal": "A",
+      "description": "Boarding gate A1 in Terminal A"
     },
     {
       "id": "gate_a5",
       "name": "Gate A5",
       "type": "gate",
       "coordinates": {"x": -95, "y": 90},
-      "terminal": "A"
+      "terminal": "A",
+      "description": "Boarding gate A5 in Terminal A"
     },
     {
       "id": "gate_b12",
       "name": "Gate B12",
       "type": "gate",
       "coordinates": {"x": 20, "y": 110},
-      "terminal": "B"
+      "terminal": "B",
+      "description": "Boarding gate B12 in Terminal B"
     },
     {
       "id": "gate_b15",
       "name": "Gate B15",
       "type": "gate",
       "coordinates": {"x": 55, "y": 110},
-      "terminal": "B"
+      "terminal": "B",
+      "description": "Boarding gate B15 in Terminal B"
     },
     {
       "id": "gate_b20",
       "name": "Gate B20",
       "type": "gate",
       "coordinates": {"x": 80, "y": 110},
-      "terminal": "B"
+      "terminal": "B",
+      "description": "Boarding gate B20 in Terminal B"
     }
   ],
   "paths": [
@@ -90,37 +95,43 @@
       "from": "entrance",
       "to": "info_desk",
       "distance": 15,
-      "directions": "Walk straight from the entrance to the center of the hall."
+      "directions": "Walk straight from the entrance to the center of the hall.",
+      "duration": 60
     },
     {
       "from": "info_desk",
       "to": "security",
       "distance": 20,
-      "directions": "Proceed forward through the main ticketing corridor."
+      "directions": "Proceed forward through the main ticketing corridor.",
+      "duration": 80
     },
     {
       "from": "security",
       "to": "food_court",
       "distance": 25,
-      "directions": "After screening, enter the Central Departures Hub."
+      "directions": "After screening, enter the Central Departures Hub.",
+      "duration": 100
     },
     {
       "from": "food_court",
       "to": "gate_a1",
       "distance": 95,
-      "directions": "Take the West Passage corridor (Left) toward the A-wing."
+      "directions": "Take the West Passage corridor (Left) toward the A-wing.",
+      "duration": 380
     },
     {
       "from": "food_court",
       "to": "gate_b12",
       "distance": 55,
-      "directions": "Use the North Gallery 2 corridor toward the start of Concourse B."
+      "directions": "Use the North Gallery 2 corridor toward the start of Concourse B.",
+      "duration": 220
     },
     {
       "from": "food_court",
       "to": "gate_b20",
       "distance": 90,
-      "directions": "Take the East Wing corridor (Right) and follow the Central Link."
+      "directions": "Take the East Wing corridor (Right) and follow the Central Link.",
+      "duration": 360
     }
   ]
 }

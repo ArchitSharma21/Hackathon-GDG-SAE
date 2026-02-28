@@ -8,7 +8,7 @@ import os
 load_dotenv()
 
 # Import routers
-from backend.routers import speech, navigation, flights, emergency
+from backend.routers import speech, navigation, flights, emergency, nlp
 
 app = FastAPI(
     title="Airport Navigation Assistant API",
@@ -30,6 +30,7 @@ app.include_router(speech.router, prefix="/api/speech", tags=["speech"])
 app.include_router(navigation.router, prefix="/api", tags=["navigation"])
 app.include_router(flights.router, prefix="/api/flights", tags=["flights"])
 app.include_router(emergency.router, prefix="/api/emergency", tags=["emergency"])
+app.include_router(nlp.router, prefix="/api/nlp", tags=["nlp"])
 
 # Mount static files for frontend
 # Get the path relative to the project root
