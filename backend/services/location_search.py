@@ -142,9 +142,13 @@ class LocationSearchService:
             'bathroom': ['bathroom', 'restroom', 'toilet', 'wc', 'lavatory'],
             'gate': ['gate', 'boarding'],
             'entrance': ['entrance', 'entry', 'door'],
+            'exit': ['exit', 'way out', 'leave'],
             'security': ['security', 'checkpoint', 'screening'],
             'info': ['information', 'info desk', 'help desk', 'assistance'],
-            'food': ['food', 'restaurant', 'cafe', 'dining', 'eat']
+            'food': ['food', 'restaurant', 'cafe', 'dining', 'eat'],
+            'restaurant': ['food', 'restaurant', 'cafe', 'dining', 'eat'],
+            'stairs': ['stairs', 'escalator', 'elevator', 'floor'],
+            'baggage': ['baggage', 'luggage', 'bags', 'claim']
         }
 
         # Check for type keywords

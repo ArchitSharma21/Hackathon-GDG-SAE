@@ -1,6 +1,6 @@
 // Airport Digital Twin Simulation
-// Locations are loaded from hamburg_airport.json and transformed from
-// entrance-origin / meters into canvas-pixel coordinates at load time.
+// Locations are loaded from hamburg_airport.json with meter-based coordinates
+// where origin (0,0) is the Main Entrance at bottom-center of the terminal.
 // Pathfinding runs live BFS on the walkable grid for every query.
 
 // ── Grid constants (must match generate_walkable_map.py) ──────────────────────
@@ -19,28 +19,87 @@ const CY = IMG_H / CANVAS_H;   // 1.28
 // ── Coordinate transformation ─────────────────────────────────────────────────
 //
 // JSON space   →  Canvas space
-//  origin        Main Entrance (bottom-centre)   →  top-left (0,0)
-//  X             negative = west, positive = east  →  same direction
-//  Y             positive = deeper into airport     →  Y is FLIPPED (canvas Y grows down)
-//  units         metres (estimated)                →  pixels
+//  origin        Main Entrance (0, 0)           →  bottom-center (400, 540)
+//  X axis        negative=west, positive=east   →  same direction
+//  Y axis        positive=deeper into terminal  →  FLIPPED (canvas Y grows down)
+//  units         meters (estimated)             →  pixels
 //
-// Calibration:
-//   ENTRANCE_CANVAS: entrance is at bottom-centre of the 800×600 canvas → (400, 560)
-//   SCALE_Y: deepest nodes sit at json_y ≈ 110 m, visible at canvas_y ≈ 87
-//            → (560 − 87) / 110 ≈ 4.3 px/m
-//   SCALE_X: widest node is gate_a5 at json_x = −95, visible at canvas_x ≈ 39
-//            → (400 − 39) / 95 ≈ 3.8 px/m
+// Calibration based on actual visual positions in airport_plan.png:
+//   Measured from image:
+//     Entrance (0, 0) → canvas (410, 540)
+//     Restroom 1A (-65, 85) → canvas (280, 270)
+//     Restroom 1B (55, 85) → canvas (520, 270)
+//
+//   Calculated scaling:
+//     SCALE_X = (520-280)/(55-(-65)) = 240/120 = 2.0 px/m
+//     SCALE_Y = (540-270)/85 = 270/85 ≈ 3.176 px/m
 
-const ENTRANCE_CANVAS_X = 400;
-const ENTRANCE_CANVAS_Y = 560;
-const SCALE_X = 3.8;   // px per metre, horizontal
-const SCALE_Y = 4.3;   // px per metre, vertical (applied with sign flip)
+const ENTRANCE_CANVAS_X = 410;  // entrance position (measured from image)
+const ENTRANCE_CANVAS_Y = 540;  // entrance near bottom
+const SCALE_X = 2.0;   // pixels per meter, horizontal
+const SCALE_Y = 270 / 85;   // pixels per meter, vertical (≈3.176, will be flipped)
 
-function jsonToCanvas(jx, jy) {
+function jsonToCanvas(metersX, metersY) {
     return {
-        x: ENTRANCE_CANVAS_X + jx * SCALE_X,
-        y: ENTRANCE_CANVAS_Y - jy * SCALE_Y   // ← flip Y
+        x: ENTRANCE_CANVAS_X + metersX * SCALE_X,
+        y: ENTRANCE_CANVAS_Y - metersY * SCALE_Y   // flip Y axis
     };
+}
+
+function canvasToMeters(canvasX, canvasY) {
+    return {
+        x: (canvasX - ENTRANCE_CANVAS_X) / SCALE_X,
+        y: (ENTRANCE_CANVAS_Y - canvasY) / SCALE_Y
+    };
+}
+
+function canvasDistance(x1, y1, x2, y2) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+function canvasDistanceInMeters(x1, y1, x2, y2) {
+    const dist = canvasDistance(x1, y1, x2, y2);
+    // Average the X and Y scales for distance calculation
+    const avgScale = (SCALE_X + SCALE_Y) / 2;
+    return dist / avgScale;
+}
+
+function getDirection(fromX, fromY, toX, toY) {
+    const angle = Math.atan2(toY - fromY, toX - fromX);
+    const degrees = angle * 180 / Math.PI;
+
+    // Convert to compass directions
+    // 0° = East, 90° = South, 180° = West, -90° = North
+    if (degrees > -22.5 && degrees <= 22.5) return 'east';
+    if (degrees > 22.5 && degrees <= 67.5) return 'southeast';
+    if (degrees > 67.5 && degrees <= 112.5) return 'south';
+    if (degrees > 112.5 && degrees <= 157.5) return 'southwest';
+    if (degrees > 157.5 || degrees <= -157.5) return 'west';
+    if (degrees > -157.5 && degrees <= -112.5) return 'northwest';
+    if (degrees > -112.5 && degrees <= -67.5) return 'north';
+    if (degrees > -67.5 && degrees <= -22.5) return 'northeast';
+    return 'forward';
+}
+
+function getTurnInstruction(currentDir, nextDir) {
+    const dirs = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'];
+    const currentIdx = dirs.indexOf(currentDir);
+    const nextIdx = dirs.indexOf(nextDir);
+
+    if (currentIdx === -1 || nextIdx === -1) return '';
+
+    let diff = (nextIdx - currentIdx + 8) % 8;
+
+    if (diff === 0) return '';
+    if (diff === 1 || diff === 2) return 'turn slightly right';
+    if (diff === 3) return 'turn right';
+    if (diff === 4) return 'turn around';
+    if (diff === 5) return 'turn left';
+    if (diff === 6 || diff === 7) return 'turn slightly left';
+
+    return '';
 }
 
 // JSON type → internal type (used by NLP matching)
@@ -140,8 +199,10 @@ class AirportSimulation {
         this.canvas = document.getElementById('airport-map');
         this.ctx    = this.canvas.getContext('2d');
 
-        // Person marker
-        this.person = { x: 400, y: 540, dotRadius: 3, visualRadius: 12 };
+        // Person marker - start at main entrance
+        // entrance in hamburg_airport.json: (0, 0) meters
+        // → canvas coordinates: (410, 540) based on actual image measurements
+        this.person = { x: 410, y: 540, dotRadius: 3, visualRadius: 12 };
 
         // Walkable grid loaded from walkable_map.json then downsampled
         this.grid = null;
@@ -153,6 +214,12 @@ class AirportSimulation {
         this.routePath = [];
         this.routeDestName = '';
 
+        // Voice navigation
+        this.navigationInstructions = [];  // Array of {text, position, distance, direction}
+        this.currentInstructionIndex = 0;
+        this.voiceEnabled = true;
+        this.lastSpokenInstruction = -1;
+
         // Manual keyboard movement
         this.isMoving = false;
         this.targetX = null;
@@ -160,6 +227,9 @@ class AirportSimulation {
         this.moveSpeed = 2;
 
         this.airportPlanImage = null;
+
+        // Text-to-speech
+        this.speechSynth = window.speechSynthesis;
 
         this.init();
     }
@@ -221,6 +291,7 @@ class AirportSimulation {
 
     async loadLocations() {
         try {
+            // Load hamburg_airport.json with meter-based coordinates
             const res  = await fetch('/assets/hamburg_airport.json');
             const data = await res.json();
 
@@ -232,8 +303,8 @@ class AirportSimulation {
                 const internalType = TYPE_MAP[node.type] ?? node.type;
                 console.log(
                     `[LOC] ${node.id.padEnd(12)} ` +
-                    `json(${String(node.coordinates.x).padStart(4)}, ${String(node.coordinates.y).padStart(4)}) ` +
-                    `→ canvas(${Math.round(cx)}, ${Math.round(cy)})`
+                    `meters(${String(node.coordinates.x).padStart(4)}, ${String(node.coordinates.y).padStart(4)}) ` +
+                    `→ canvas(${Math.round(cx).toString().padStart(3)}, ${Math.round(cy).toString().padStart(3)})`
                 );
                 return {
                     id      : node.id,
@@ -244,7 +315,7 @@ class AirportSimulation {
                 };
             });
 
-            console.log(`[LOC] ${this.locations.length} locations loaded`);
+            console.log(`[LOC] ${this.locations.length} locations loaded from hamburg_airport.json`);
         } catch (e) {
             console.error('[LOC] Failed to load hamburg_airport.json:', e);
             this._setNavBtn(false, 'Locations unavailable');
@@ -311,7 +382,7 @@ class AirportSimulation {
             console.log(`→ info → ${destId}`);
 
         } else if (/gate/.test(q)) {
-            // Match patterns like "gate a1", "gate b 20", "gate_b15"
+            // Match patterns like "gate a24", "gate e 12", "gate_d5"
             const m = q.match(/gate[\s_]*([a-e])\s*(\d+)/i);
             if (m) {
                 const gateId = `gate_${m[1].toLowerCase()}${m[2]}`;
@@ -368,6 +439,9 @@ class AirportSimulation {
         this.routeDestName = destLoc.name;
         this._setStatus(`Route to: ${destLoc.name}  (${path.length} steps)`, false);
         console.log(`[BFS] Path found — ${path.length} waypoints`);
+
+        // Generate turn-by-turn voice instructions
+        this._generateVoiceInstructions();
     }
 
     _nearestOfType(type) {
@@ -383,7 +457,171 @@ class AirportSimulation {
     clearRoute() {
         this.routePath = [];
         this.routeDestName = '';
+        this.navigationInstructions = [];
+        this.currentInstructionIndex = 0;
+        this.lastSpokenInstruction = -1;
         this._setStatus('', false);
+
+        // Stop any ongoing speech
+        if (this.speechSynth) {
+            this.speechSynth.cancel();
+        }
+
+        // Hide voice controls
+        const voiceControls = document.getElementById('voice-controls');
+        if (voiceControls) {
+            voiceControls.style.display = 'none';
+        }
+    }
+
+    _generateVoiceInstructions() {
+        this.navigationInstructions = [];
+        this.currentInstructionIndex = 0;
+        this.lastSpokenInstruction = -1;
+
+        if (!this.routePath || this.routePath.length < 2) return;
+
+        const path = this.routePath;
+        const instructions = [];
+
+        // Simplify path by removing intermediate points in same direction
+        const simplified = [path[0]];
+        let currentDir = null;
+
+        for (let i = 1; i < path.length; i++) {
+            const dir = getDirection(
+                simplified[simplified.length - 1].x,
+                simplified[simplified.length - 1].y,
+                path[i].x,
+                path[i].y
+            );
+
+            // Add waypoint if direction changed or it's the last point
+            if (dir !== currentDir || i === path.length - 1) {
+                simplified.push(path[i]);
+                currentDir = dir;
+            }
+        }
+
+        console.log(`[VOICE] Simplified path: ${path.length} → ${simplified.length} waypoints`);
+
+        // Generate instructions for each segment
+        let prevDirection = null;
+
+        for (let i = 0; i < simplified.length - 1; i++) {
+            const from = simplified[i];
+            const to = simplified[i + 1];
+
+            const distance = canvasDistanceInMeters(from.x, from.y, to.x, to.y);
+            const direction = getDirection(from.x, from.y, to.x, to.y);
+
+            let instructionText = '';
+
+            if (i === 0) {
+                // First instruction
+                instructionText = `Starting navigation to ${this.routeDestName}. `;
+                instructionText += `Move ${Math.round(distance)} meters ${direction}.`;
+            } else {
+                // Subsequent instructions
+                const turn = getTurnInstruction(prevDirection, direction);
+                if (turn) {
+                    instructionText = `${turn.charAt(0).toUpperCase() + turn.slice(1)}, then move ${Math.round(distance)} meters ${direction}.`;
+                } else {
+                    instructionText = `Continue ${Math.round(distance)} meters ${direction}.`;
+                }
+            }
+
+            instructions.push({
+                text: instructionText,
+                position: to,
+                distance: distance,
+                direction: direction,
+                waypointIndex: i
+            });
+
+            prevDirection = direction;
+        }
+
+        // Add final instruction
+        instructions.push({
+            text: `You have arrived at ${this.routeDestName}.`,
+            position: simplified[simplified.length - 1],
+            distance: 0,
+            direction: 'arrived',
+            waypointIndex: simplified.length - 1
+        });
+
+        this.navigationInstructions = instructions;
+
+        console.log('[VOICE] Generated instructions:', instructions.map(i => i.text));
+
+        // Speak first instruction
+        this._speakCurrentInstruction();
+    }
+
+    _speakCurrentInstruction() {
+        if (!this.voiceEnabled) return;
+        if (this.currentInstructionIndex >= this.navigationInstructions.length) return;
+        if (this.currentInstructionIndex === this.lastSpokenInstruction) return;
+
+        const instruction = this.navigationInstructions[this.currentInstructionIndex];
+
+        console.log(`[VOICE] Speaking: "${instruction.text}"`);
+
+        if (this.speechSynth) {
+            this.speechSynth.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(instruction.text);
+            utterance.rate = 0.9;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+
+            this.speechSynth.speak(utterance);
+        }
+
+        this.lastSpokenInstruction = this.currentInstructionIndex;
+
+        // Update status display
+        this._setStatus(`🔊 ${instruction.text}`, false);
+
+        // Update instruction counter
+        const counterEl = document.getElementById('instruction-counter');
+        if (counterEl) {
+            counterEl.textContent = `Step ${this.currentInstructionIndex + 1}/${this.navigationInstructions.length}`;
+        }
+
+        // Show voice controls
+        const voiceControls = document.getElementById('voice-controls');
+        if (voiceControls) {
+            voiceControls.style.display = 'block';
+        }
+    }
+
+    _checkNavigationProgress() {
+        if (this.navigationInstructions.length === 0) return;
+        if (this.currentInstructionIndex >= this.navigationInstructions.length) return;
+
+        const currentInstruction = this.navigationInstructions[this.currentInstructionIndex];
+        const targetPos = currentInstruction.position;
+
+        // Check if person is close to the current waypoint
+        const distToWaypoint = canvasDistance(
+            this.person.x, this.person.y,
+            targetPos.x, targetPos.y
+        );
+
+        // Threshold: 20 pixels (about 5-7 meters)
+        if (distToWaypoint < 20) {
+            // Move to next instruction
+            this.currentInstructionIndex++;
+
+            if (this.currentInstructionIndex < this.navigationInstructions.length) {
+                console.log(`[VOICE] Reached waypoint ${this.currentInstructionIndex}, speaking next instruction`);
+                this._speakCurrentInstruction();
+            } else {
+                console.log('[VOICE] Navigation complete!');
+            }
+        }
     }
 
     _setStatus(text, isError) {
@@ -420,6 +658,7 @@ class AirportSimulation {
             }
         }
         this._updatePositionUI();
+        this._checkNavigationProgress();
     }
 
     // ── Events ────────────────────────────────────────────────────────────────
@@ -441,12 +680,14 @@ class AirportSimulation {
                 this.person.x = nx;
                 this.person.y = ny;
                 this._updatePositionUI();
+                this._checkNavigationProgress();
             }
         });
 
         const resetBtn = document.getElementById('reset-position');
         if (resetBtn) resetBtn.addEventListener('click', () => {
             this.clearRoute();
+            // Reset to main entrance (0, 0 in meters)
             this.person.x = ENTRANCE_CANVAS_X;
             this.person.y = ENTRANCE_CANVAS_Y;
             this._updatePositionUI();
@@ -463,6 +704,22 @@ class AirportSimulation {
             navInput.addEventListener('keydown',
                 e => { if (e.key === 'Enter') this.navigateByQuery(navInput.value); });
         }
+
+        // Voice control buttons
+        const repeatBtn = document.getElementById('repeat-instruction');
+        if (repeatBtn) repeatBtn.addEventListener('click', () => {
+            this.lastSpokenInstruction = -1; // Force re-speak
+            this._speakCurrentInstruction();
+        });
+
+        const toggleVoiceBtn = document.getElementById('toggle-voice');
+        if (toggleVoiceBtn) toggleVoiceBtn.addEventListener('click', () => {
+            this.voiceEnabled = !this.voiceEnabled;
+            toggleVoiceBtn.textContent = this.voiceEnabled ? '🔇 Voice Off' : '🔊 Voice On';
+            if (!this.voiceEnabled && this.speechSynth) {
+                this.speechSynth.cancel();
+            }
+        });
 
         window.addEventListener('message', (e) => {
             if (e.data?.type === 'navigate_to')    this.navigateByQuery(e.data.query ?? '');

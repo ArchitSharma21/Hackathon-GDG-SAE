@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Corrected Coordinate Transformation Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; }
+        h1 { color: #2c3e50; }
+        .calibration { background: #e8f5e9; padding: 15px; margin: 20px 0; border-left: 4px solid #4caf50; }
+        table { border-collapse: collapse; margin: 20px 0; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #3498db; color: white; }
+        tr:nth-child(even) { background: #f2f2f2; }
+        .match { background: #c8e6c9 !important; font-weight: bold; }
+        .canvas-preview { border: 3px solid #333; margin: 20px 0; display: block; }
+        .info { background: #fff3cd; padding: 10px; margin: 10px 0; border-left: 4px solid #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Corrected Hamburg Airport Coordinates</h1>
+
+        <div class="calibration">
+            <h3>✅ Calibration (Based on Actual Image Measurements)</h3>
+            <pre>ENTRANCE_CANVAS_X = 410  (measured from actual positions)
+ENTRANCE_CANVAS_Y = 540  (near bottom)
+SCALE_X = 2.0 px/meter   (verified with bathroom positions)
+SCALE_Y = 3.176 px/meter (270/85, Y-axis flipped)
+Canvas Size = 800 × 600</pre>
+        </div>
+
+        <div class="info">
+            <strong>📏 Measurement Method:</strong><br>
+            • Restroom 1A: (-65m, 85m) → canvas (280, 270)<br>
+            • Restroom 1B: (55m, 85m) → canvas (520, 270)<br>
+            • Distance: 120 meters = 240 pixels → SCALE_X = 2.0 ✓<br>
+            • Depth: 85 meters = 270 pixels → SCALE_Y = 3.176 ✓
+        </div>
+
+        <h2>Coordinate Mapping Table</h2>
+        <table id="coords-table">
+            <thead>
+                <tr>
+                    <th>Location</th>
+                    <th>Meters (X, Y)</th>
+                    <th>Canvas (X, Y)</th>
+                    <th>Visual Position</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <h2>Visual Preview (800×600 Canvas)</h2>
+        <canvas id="preview" class="canvas-preview" width="800" height="600"></canvas>
+
+        <div class="info">
+            <strong>🎨 Color Legend:</strong>
+            🟢 Green = Entrance | 🔵 Blue = Gates | 🟣 Purple = Bathrooms | 🟠 Orange = Other
+        </div>
+    </div>
+
+    <script>
+        // CORRECTED transformation constants
+        const ENTRANCE_CANVAS_X = 410;
+        const ENTRANCE_CANVAS_Y = 540;
+        const SCALE_X = 2.0;
+        const SCALE_Y = 270 / 85;  // ≈ 3.176
+
+        function jsonToCanvas(metersX, metersY) {
+            return {
+                x: ENTRANCE_CANVAS_X + metersX * SCALE_X,
+                y: ENTRANCE_CANVAS_Y - metersY * SCALE_Y
+            };
+        }
+
+        // Test data from hamburg_airport.json
+        const locations = [
+            { id: 'entrance', name: 'Main Entrance', x: 0, y: 0 },
+            { id: 'info_desk', name: 'Information Desk', x: 0, y: 15 },
+            { id: 'security', name: 'Security Checkpoint', x: 0, y: 35 },
+            { id: 'food_court', name: 'Food Court', x: 0, y: 60 },
+            { id: 'bathroom_1', name: 'Restroom 1A', x: -65, y: 85, measured: {x: 280, y: 270} },
+            { id: 'bathroom_2', name: 'Restroom 1B', x: 55, y: 85, measured: {x: 520, y: 270} },
+            { id: 'gate_a1', name: 'Gate A1', x: -85, y: 110 },
+            { id: 'gate_a5', name: 'Gate A5', x: -95, y: 90 },
+            { id: 'gate_b12', name: 'Gate B12', x: 20, y: 110 },
+            { id: 'gate_b15', name: 'Gate B15', x: 55, y: 110 },
+            { id: 'gate_b20', name: 'Gate B20', x: 80, y: 110 }
+        ];
+
+        // Populate table
+        const tbody = document.querySelector('#coords-table tbody');
+        locations.forEach(loc => {
+            const canvas = jsonToCanvas(loc.x, loc.y);
+            const visual = getVisualPosition(canvas.x, canvas.y);
+
+            const row = tbody.insertRow();
+            const isMatch = loc.measured &&
+                           Math.abs(canvas.x - loc.measured.x) < 1 &&
+                           Math.abs(canvas.y - loc.measured.y) < 1;
+
+            if (isMatch) row.className = 'match';
+
+            row.innerHTML = `
+                <td><strong>${loc.name}</strong></td>
+                <td>(${loc.x}, ${loc.y})</td>
+                <td>(${Math.round(canvas.x)}, ${Math.round(canvas.y)})${loc.measured ? ' ✓' : ''}</td>
+                <td>${visual}</td>
+            `;
+        });
+
+        function getVisualPosition(x, y) {
+            const horizontal = x < 300 ? 'left' : x > 500 ? 'right' : 'center';
+            const vertical = y < 250 ? 'top' : y > 400 ? 'bottom' : 'middle';
+            return `${vertical}-${horizontal}`;
+        }
+
+        // Draw preview
+        const canvas = document.getElementById('preview');
+        const ctx = canvas.getContext('2d');
+
+        // Background
+        ctx.fillStyle = '#f8f9fa';
+        ctx.fillRect(0, 0, 800, 600);
+
+        // Grid (100px squares)
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.lineWidth = 1;
+        for (let x = 0; x <= 800; x += 100) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, 600);
+            ctx.stroke();
+        }
+        for (let y = 0; y <= 600; y += 100) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(800, y);
+            ctx.stroke();
+        }
+
+        // Canvas border
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(1, 1, 798, 598);
+
+        // Draw coordinate axes
+        ctx.strokeStyle = '#999';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+        // Vertical line at entrance X
+        ctx.beginPath();
+        ctx.moveTo(410, 0);
+        ctx.lineTo(410, 600);
+        ctx.stroke();
+        // Horizontal line at entrance Y
+        ctx.beginPath();
+        ctx.moveTo(0, 540);
+        ctx.lineTo(800, 540);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Draw locations
+        locations.forEach(loc => {
+            const pos = jsonToCanvas(loc.x, loc.y);
+            const isGate = loc.id.startsWith('gate');
+            const isBathroom = loc.id.startsWith('bathroom');
+            const isEntrance = loc.id === 'entrance';
+
+            // Color based on type
+            if (isEntrance) {
+                ctx.fillStyle = '#4CAF50';
+            } else if (isGate) {
+                ctx.fillStyle = '#2196F3';
+            } else if (isBathroom) {
+                ctx.fillStyle = '#9C27B0';
+            } else {
+                ctx.fillStyle = '#FF9800';
+            }
+
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Label
+            ctx.font = 'bold 11px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#000';
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+            ctx.strokeText(loc.id, pos.x, pos.y - 16);
+            ctx.fillText(loc.id, pos.x, pos.y - 16);
+
+            // Show coordinates
+            ctx.font = '9px sans-serif';
+            const coordText = `(${Math.round(pos.x)},${Math.round(pos.y)})`;
+            ctx.strokeText(coordText, pos.x, pos.y + 22);
+            ctx.fillText(coordText, pos.x, pos.y + 22);
+
+            // Checkmark for measured positions
+            if (loc.measured) {
+                ctx.fillStyle = '#4CAF50';
+                ctx.font = 'bold 16px sans-serif';
+                ctx.fillText('✓', pos.x + 15, pos.y - 10);
+            }
+        });
+
+        // Legend
+        ctx.font = 'bold 13px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#000';
+        ctx.fillText('🟢 Entrance  🔵 Gates  🟣 Bathrooms  🟠 Info/Security/Food', 10, 585);
+
+        // Axis labels
+        ctx.font = '11px sans-serif';
+        ctx.fillStyle = '#666';
+        ctx.fillText('Entrance X=410', 415, 15);
+        ctx.fillText('Entrance Y=540', 10, 535);
+
+        console.log('✅ Coordinate transformation test v2 loaded');
+        console.log('SCALE_X =', SCALE_X, 'px/m');
+        console.log('SCALE_Y =', SCALE_Y.toFixed(3), 'px/m');
+    </script>
+</body>
+</html>

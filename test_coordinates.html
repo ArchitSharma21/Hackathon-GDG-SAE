@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coordinate Transformation Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        table { border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background: #f0f0f0; }
+        .canvas-preview { border: 2px solid #333; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>Hamburg Airport Coordinate Transformation Test</h1>
+
+    <h2>Calibration Constants</h2>
+    <pre>
+ENTRANCE_CANVAS_X = 400  (horizontal center)
+ENTRANCE_CANVAS_Y = 540  (near bottom)
+SCALE_X = 3.7 px/meter
+SCALE_Y = 4.0 px/meter
+Canvas Size = 800 × 600
+    </pre>
+
+    <h2>Coordinate Mapping</h2>
+    <table id="coords-table">
+        <thead>
+            <tr>
+                <th>Location</th>
+                <th>Meters (X, Y)</th>
+                <th>Canvas (X, Y)</th>
+                <th>Visual Position</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h2>Visual Preview</h2>
+    <canvas id="preview" class="canvas-preview" width="800" height="600"></canvas>
+
+    <script>
+        // Transformation function
+        const ENTRANCE_CANVAS_X = 400;
+        const ENTRANCE_CANVAS_Y = 540;
+        const SCALE_X = 3.7;
+        const SCALE_Y = 4.0;
+
+        function jsonToCanvas(metersX, metersY) {
+            return {
+                x: ENTRANCE_CANVAS_X + metersX * SCALE_X,
+                y: ENTRANCE_CANVAS_Y - metersY * SCALE_Y
+            };
+        }
+
+        // Test data from hamburg_airport.json
+        const locations = [
+            { id: 'entrance', name: 'Main Entrance', x: 0, y: 0 },
+            { id: 'info_desk', name: 'Information Desk', x: 0, y: 15 },
+            { id: 'security', name: 'Security Checkpoint', x: 0, y: 35 },
+            { id: 'food_court', name: 'Food Court', x: 0, y: 60 },
+            { id: 'bathroom_1', name: 'Restroom Terminal 1 A', x: -65, y: 85 },
+            { id: 'bathroom_2', name: 'Restroom Terminal 1 B', x: 55, y: 85 },
+            { id: 'gate_a1', name: 'Gate A1', x: -85, y: 110 },
+            { id: 'gate_a5', name: 'Gate A5', x: -95, y: 90 },
+            { id: 'gate_b12', name: 'Gate B12', x: 20, y: 110 },
+            { id: 'gate_b15', name: 'Gate B15', x: 55, y: 110 },
+            { id: 'gate_b20', name: 'Gate B20', x: 80, y: 110 }
+        ];
+
+        // Populate table
+        const tbody = document.querySelector('#coords-table tbody');
+        locations.forEach(loc => {
+            const canvas = jsonToCanvas(loc.x, loc.y);
+            const visual = getVisualPosition(canvas.x, canvas.y);
+
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td><strong>${loc.name}</strong></td>
+                <td>(${loc.x}, ${loc.y})</td>
+                <td>(${Math.round(canvas.x)}, ${Math.round(canvas.y)})</td>
+                <td>${visual}</td>
+            `;
+        });
+
+        function getVisualPosition(x, y) {
+            const horizontal = x < 200 ? 'left' : x > 600 ? 'right' : 'center';
+            const vertical = y < 200 ? 'top' : y > 400 ? 'bottom' : 'middle';
+            return `${vertical}-${horizontal}`;
+        }
+
+        // Draw preview
+        const canvas = document.getElementById('preview');
+        const ctx = canvas.getContext('2d');
+
+        // Background
+        ctx.fillStyle = '#f5f5f5';
+        ctx.fillRect(0, 0, 800, 600);
+
+        // Grid
+        ctx.strokeStyle = '#ddd';
+        ctx.lineWidth = 1;
+        for (let x = 0; x <= 800; x += 100) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, 600);
+            ctx.stroke();
+        }
+        for (let y = 0; y <= 600; y += 100) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(800, y);
+            ctx.stroke();
+        }
+
+        // Draw locations
+        locations.forEach(loc => {
+            const canvas = jsonToCanvas(loc.x, loc.y);
+            const isGate = loc.id.startsWith('gate');
+            const isBathroom = loc.id.startsWith('bathroom');
+            const isEntrance = loc.id === 'entrance';
+
+            // Color based on type
+            if (isEntrance) {
+                ctx.fillStyle = '#4CAF50';
+            } else if (isGate) {
+                ctx.fillStyle = '#2196F3';
+            } else if (isBathroom) {
+                ctx.fillStyle = '#9C27B0';
+            } else {
+                ctx.fillStyle = '#FF9800';
+            }
+
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(canvas.x, canvas.y, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Label
+            ctx.font = 'bold 11px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#000';
+            ctx.fillText(loc.id, canvas.x, canvas.y - 12);
+        });
+
+        // Legend
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#000';
+        ctx.fillText('🟢 Entrance  🔵 Gates  🟣 Bathrooms  🟠 Other', 10, 590);
+
+        // Canvas border indicators
+        ctx.strokeStyle = '#f00';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(1, 1, 798, 598);
+
+        console.log('Coordinate transformation test loaded');
+    </script>
+</body>
+</html>

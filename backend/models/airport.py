@@ -8,10 +8,11 @@ class Coordinates(BaseModel):
 class AirportNode(BaseModel):
     id: str
     name: str
-    type: str  # entrance, gate, bathroom, security, info, food
+    type: str  # entrance, exit, gate, bathroom, security, info, food/restaurant, stairs, baggage
     coordinates: Coordinates
     description: str
     terminal: Optional[str] = None
+    floor: Optional[int] = None  # Floor number (1 for arrivals, 2 for departures)
 
 class AirportPath(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -27,6 +28,7 @@ class AirportMap(BaseModel):
     terminal: str
     nodes: List[AirportNode]
     paths: List[AirportPath]
+    floors: Optional[int] = None  # Number of floors in the airport
 
 class LocationSearchResult(BaseModel):
     id: str
